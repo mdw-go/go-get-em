@@ -19,8 +19,14 @@ import (
 var Version = "dev"
 
 func main() {
+	var (
+		review = true
+		update = true
+	)
 	log.SetFlags(log.Lshortfile)
 	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", filepath.Base(os.Args[0]), Version), flag.ExitOnError)
+	flags.BoolVar(&review, "review", review, "When set, print 'open' commands with vcs diff URLs for outdated dependencies.")
+	flags.BoolVar(&update, "update", update, "When set, print 'go get' commands to upgrade outdated dependencies.")
 	flags.Usage = func() {
 		_, _ = fmt.Fprintf(flags.Output(), "Usage of %s:\n", flags.Name())
 		_, _ = fmt.Fprintf(flags.Output(), "  "+
@@ -77,21 +83,30 @@ func main() {
 		return
 	}
 
+	if !review && !update {
+		log.Println("[INFO] not output requested")
+		return
+	}
 	log.Println("Execute what you will of the following output to review and update the outdated dependencies.")
-	fmt.Println()
-	for _, dependency := range outdated {
-		if strings.HasPrefix(dependency.Path, "bitbucket.org") {
-			fmt.Printf("open https://%s/branches/compare/%s"+"%%0D"+"%s#commits\n", vcsRepoPath(dependency), dependency.Update.Version, dependency.Version)
-		} else if strings.HasPrefix(dependency.Path, "github.com") {
-			fmt.Printf("open https://%s/compare/%s...%s\n", vcsRepoPath(dependency), dependency.Version, dependency.Update.Version)
-		} else {
-			fmt.Println("# Not sure how to render a diff URL for this module:", dependency.Path, dependency.Version, dependency.Update.Version)
+
+	if review {
+		fmt.Println()
+		for _, dependency := range outdated {
+			if strings.HasPrefix(dependency.Path, "bitbucket.org") {
+				fmt.Printf("open https://%s/branches/compare/%s"+"%%0D"+"%s#commits\n", vcsRepoPath(dependency), dependency.Update.Version, dependency.Version)
+			} else if strings.HasPrefix(dependency.Path, "github.com") {
+				fmt.Printf("open https://%s/compare/%s...%s\n", vcsRepoPath(dependency), dependency.Version, dependency.Update.Version)
+			} else {
+				fmt.Println("# Not sure how to render a diff URL for this module:", dependency.Path, dependency.Version, dependency.Update.Version)
+			}
 		}
 	}
 
-	fmt.Println()
-	for _, dependency := range outdated {
-		fmt.Printf("go get -u %s@%s\n", dependency.Path, dependency.Update.Version)
+	if update {
+		fmt.Println()
+		for _, dependency := range outdated {
+			fmt.Printf("go get -u %s@%s\n", dependency.Path, dependency.Update.Version)
+		}
 	}
 }
 
