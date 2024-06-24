@@ -84,20 +84,20 @@ func main() {
 	}
 
 	if !review && !update {
-		log.Println("[INFO] not output requested")
+		log.Println("[INFO] No output requested")
 		return
 	}
-	log.Println("Execute what you will of the following output to review and update the outdated dependencies.")
+	log.Println("Execute what you will of the following output to review and/or update the outdated dependencies.")
 
 	if review {
 		fmt.Println()
 		for _, dependency := range outdated {
 			if strings.HasPrefix(dependency.Path, "bitbucket.org") {
-				fmt.Printf("open https://%s/branches/compare/%s"+"%%0D"+"%s#commits\n", vcsRepoPath(dependency), dependency.Update.Version, dependency.Version)
+				fmt.Println("open", bitbucketDiffURL(dependency))
 			} else if strings.HasPrefix(dependency.Path, "github.com") {
-				fmt.Printf("open https://%s/compare/%s...%s\n", vcsRepoPath(dependency), dependency.Version, dependency.Update.Version)
+				fmt.Println("open", githubDiffURL(dependency))
 			} else {
-				fmt.Println("# Not sure how to render a diff URL for this module:", dependency.Path, dependency.Version, dependency.Update.Version)
+				fmt.Println(unknownDiffURL(dependency))
 			}
 		}
 	}
@@ -110,6 +110,27 @@ func main() {
 	}
 }
 
+func bitbucketDiffURL(dependency Module) string {
+	return fmt.Sprintf("https://%s/branches/compare/%s"+"%%0D"+"%s#commits",
+		vcsRepoPath(dependency),
+		dependency.Update.Version,
+		dependency.Version,
+	)
+}
+func githubDiffURL(dependency Module) string {
+	return fmt.Sprintf("https://%s/compare/%s...%s",
+		vcsRepoPath(dependency),
+		dependency.Version,
+		dependency.Update.Version,
+	)
+}
+func unknownDiffURL(dependency Module) string {
+	return fmt.Sprintln("# Not sure how to render a diff URL for this module:",
+		dependency.Path,
+		dependency.Version,
+		dependency.Update.Version,
+	)
+}
 func vcsRepoPath(module Module) string {
 	base := path.Base(module.Path)
 	if !strings.HasPrefix(base, "v") {
