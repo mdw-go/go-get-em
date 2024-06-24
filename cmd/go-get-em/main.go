@@ -87,7 +87,7 @@ func main() {
 		log.Println("[INFO] No output requested")
 		return
 	}
-	log.Println("Execute what you will of the following output to review and/or update the outdated dependencies.")
+	log.Println("[INFO] Execute what you will of the following output to review and/or update the outdated dependencies.")
 
 	if review {
 		fmt.Println()
