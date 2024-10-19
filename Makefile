@@ -9,6 +9,6 @@ fmt:
 	@go version && go fmt ./... && go mod tidy
 
 install: test
-	go install -ldflags="-X 'main.Version=$(VERSION)'" github.com/mdwhatcott/go-get-em/cmd/...
+	go install -ldflags="-X 'main.Version=$(VERSION)'" github.com/mdw-go/go-get-em/cmd/...
 
 .PHONY: test fmt install
