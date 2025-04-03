@@ -20,13 +20,15 @@ var Version = "dev"
 
 func main() {
 	var (
-		review = true
-		update = true
+		review   = true
+		update   = true
+		indirect = false
 	)
 	log.SetFlags(log.Lshortfile)
 	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", filepath.Base(os.Args[0]), Version), flag.ExitOnError)
 	flags.BoolVar(&review, "review", review, "When set, print 'open' commands with vcs diff URLs for outdated dependencies.")
 	flags.BoolVar(&update, "update", update, "When set, print 'go get' commands to upgrade outdated dependencies.")
+	flags.BoolVar(&indirect, "indirect", indirect, "When set, include outdated indirect dependencies in the output.")
 	flags.Usage = func() {
 		_, _ = fmt.Fprintf(flags.Output(), "Usage of %s:\n", flags.Name())
 		_, _ = fmt.Fprintf(flags.Output(), "  "+
@@ -72,10 +74,14 @@ func main() {
 		if dependency.Deprecated != "" {
 			log.Printf("[WARN] [%s] is deprecated: %s", dependency.Path, dependency.Deprecated)
 		}
-		if dependency.Update != nil && !dependency.Indirect {
-			log.Printf("[INFO] %10s..%-10s  %s", dependency.Version, dependency.Update.Version, dependency.Path)
-			outdated = append(outdated, dependency)
+		if dependency.Update == nil {
+			continue
 		}
+		if dependency.Indirect && !indirect {
+			continue
+		}
+		log.Printf("[INFO] %10s..%-10s  %s", dependency.Version, dependency.Update.Version, dependency.Path)
+		outdated = append(outdated, dependency)
 	}
 
 	if len(outdated) == 0 {
