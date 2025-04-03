@@ -72,7 +72,7 @@ func main() {
 		if dependency.Deprecated != "" {
 			log.Printf("[WARN] [%s] is deprecated: %s", dependency.Path, dependency.Deprecated)
 		}
-		if dependency.Update != nil {
+		if dependency.Update != nil && !dependency.Indirect {
 			log.Printf("[INFO] %10s..%-10s  %s", dependency.Version, dependency.Update.Version, dependency.Path)
 			outdated = append(outdated, dependency)
 		}
