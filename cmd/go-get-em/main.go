@@ -33,7 +33,7 @@ func main() {
 		_, _ = fmt.Fprintf(flags.Output(), "Usage of %s:\n", flags.Name())
 		_, _ = fmt.Fprintf(flags.Output(), "  "+
 			"Run the command in a directory w/ a go.mod file to emit a list of "+
-			"outdated dependencies and commands to review and update them.",
+			"outdated dependencies and commands to review and update them.\n",
 		)
 		flags.PrintDefaults()
 	}
