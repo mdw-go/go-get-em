@@ -20,8 +20,8 @@ var Version = "dev"
 
 func main() {
 	var (
-		review   = true
-		update   = true
+		review   = false
+		update   = false
 		indirect = false
 	)
 	log.SetFlags(log.Lshortfile)
