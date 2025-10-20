@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -20,14 +21,16 @@ var Version = "dev"
 
 func main() {
 	var (
-		review   = false
-		update   = false
+		diff     = false
+		script   = false
+		execute  = false
 		indirect = false
 	)
 	log.SetFlags(log.Lshortfile)
 	flags := flag.NewFlagSet(fmt.Sprintf("%s @ %s", filepath.Base(os.Args[0]), Version), flag.ExitOnError)
-	flags.BoolVar(&review, "review", review, "When set, print 'open' commands with vcs diff URLs for outdated dependencies.")
-	flags.BoolVar(&update, "update", update, "When set, print 'go get' commands to upgrade outdated dependencies.")
+	flags.BoolVar(&diff, "diff", diff, "When set, print 'open' commands with vcs diff URLs for outdated dependencies.")
+	flags.BoolVar(&script, "script", script, "When set, print 'go get' commands to upgrade outdated dependencies.")
+	flags.BoolVar(&execute, "execute", execute, "When set, prompts user to execute generated output one line at a time, instead of merely printing as described above.")
 	flags.BoolVar(&indirect, "indirect", indirect, "When set, include outdated indirect dependencies in the output.")
 	flags.Usage = func() {
 		_, _ = fmt.Fprintf(flags.Output(), "Usage of %s:\n", flags.Name())
@@ -89,31 +92,48 @@ func main() {
 		return
 	}
 
-	if !review && !update {
+	if !diff && !script {
 		log.Println("[INFO] No output requested")
 		return
 	}
 	log.Println("[INFO] Execute what you will of the following output to review and/or update the outdated dependencies.")
 
-	if review {
+	if diff {
 		fmt.Println()
 		for _, dependency := range outdated {
-			if strings.HasPrefix(dependency.Path, "bitbucket.org") {
-				fmt.Println("open", bitbucketDiffURL(dependency))
-			} else if strings.HasPrefix(dependency.Path, "github.com") {
-				fmt.Println("open", githubDiffURL(dependency))
-			} else {
-				fmt.Println(unknownDiffURL(dependency))
-			}
+			process(composeDiffCommand(dependency), execute)
 		}
 	}
 
-	if update {
+	if script {
 		fmt.Println()
 		for _, dependency := range outdated {
-			fmt.Printf("go get -u %s@%s\n", dependency.Path, dependency.Update.Version)
+			process(fmt.Sprintf("go get -u %s@%s\n", dependency.Path, dependency.Update.Version), execute)
 		}
 	}
+}
+
+func composeDiffCommand(dependency Module) string {
+	if strings.HasPrefix(dependency.Path, "bitbucket.org") {
+		return fmt.Sprintln("open", bitbucketDiffURL(dependency))
+	} else if strings.HasPrefix(dependency.Path, "github.com") {
+		return fmt.Sprintln("open", githubDiffURL(dependency))
+	} else {
+		return fmt.Sprintln(unknownDiffURL(dependency))
+	}
+}
+
+func process(command string, execute bool) {
+	if !execute {
+		fmt.Println(command)
+		return
+	}
+	fmt.Print("\n$ ", command, "    # Execute? [Y/n] ")
+	if !yes() {
+		return
+	}
+	fmt.Println()
+	shell(command)
 }
 
 func bitbucketDiffURL(dependency Module) string {
@@ -171,4 +191,29 @@ type Module struct {
 // ModuleError source: https://go.dev/ref/mod#go-list-m
 type ModuleError struct {
 	Err string // the error itself
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+func shell(line string) {
+	command := exec.Command("bash", "-c", line)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+
+	err := command.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func yes() bool {
+	response := strings.ToLower(strings.TrimSpace(prompt()))
+	return response == "" || response == "y" || response == "yes"
+}
+
+func prompt() string {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	return scanner.Text()
 }
