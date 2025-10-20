@@ -93,10 +93,9 @@ func main() {
 	}
 
 	if !diff && !script {
-		log.Println("[INFO] No output requested")
+		log.Println("[INFO] No output or action requested")
 		return
 	}
-	log.Println("[INFO] Execute what you will of the following output to review and/or update the outdated dependencies.")
 
 	if diff {
 		fmt.Println()
@@ -115,11 +114,11 @@ func main() {
 
 func composeDiffCommand(dependency Module) string {
 	if strings.HasPrefix(dependency.Path, "bitbucket.org") {
-		return fmt.Sprintln("open", bitbucketDiffURL(dependency))
+		return fmt.Sprintf("open %s", bitbucketDiffURL(dependency))
 	} else if strings.HasPrefix(dependency.Path, "github.com") {
-		return fmt.Sprintln("open", githubDiffURL(dependency))
+		return fmt.Sprintf("open %s", githubDiffURL(dependency))
 	} else {
-		return fmt.Sprintln(unknownDiffURL(dependency))
+		return unknownDiffURL(dependency)
 	}
 }
 
