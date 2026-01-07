@@ -22,8 +22,8 @@ var Version = "dev"
 func main() {
 	var (
 		diff     = false
-		script   = false
-		execute  = false
+		script   = true
+		execute  = true
 		indirect = false
 	)
 	log.SetFlags(log.Lshortfile)
