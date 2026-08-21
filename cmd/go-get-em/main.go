@@ -114,11 +114,11 @@ func main() {
 func composeDiffCommand(dependency Module) string {
 	if strings.HasPrefix(dependency.Path, "bitbucket.org") {
 		return fmt.Sprintf("open %s", bitbucketDiffURL(dependency))
-	} else if strings.HasPrefix(dependency.Path, "github.com") {
-		return fmt.Sprintf("open %s", githubDiffURL(dependency))
-	} else {
-		return unknownDiffURL(dependency)
 	}
+	if strings.HasPrefix(dependency.Path, "github.com") {
+		return fmt.Sprintf("open %s", githubDiffURL(dependency))
+	}
+	return unknownDiffURL(dependency)
 }
 
 func process(command string, execute bool) {
