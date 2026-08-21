@@ -1,3 +1,3 @@
 module github.com/mdw-go/go-get-em
 
-go 1.22
+go 1.27
