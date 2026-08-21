@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"flag"
 	"fmt"
@@ -52,9 +53,9 @@ func main() {
 		log.Fatalf("[WARN] Failed to execute command [%s]: %v", command.String(), err)
 	}
 	var dependencies []Module
-	for {
+	for decoder := jsontext.NewDecoder(&output); ; {
 		var dependency Module
-		err = json.UnmarshalRead(&output, &dependency)
+		err = json.UnmarshalDecode(decoder, &dependency)
 		if dependency.Path != "" {
 			dependencies = append(dependencies, dependency)
 		}
